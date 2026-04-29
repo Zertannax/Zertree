@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 280" width="700" height="280">
+  <rect x="10" y="10" width="680" height="260" rx="8" fill="#0A0A0F" stroke="#1A1A2E" stroke-width="2"/>
+  
+  <circle cx="30" cy="25" r="6" fill="#FF5F56"/>
+  <circle cx="50" cy="25" r="6" fill="#FFBD2E"/>
+  <circle cx="70" cy="25" r="6" fill="#27C93F"/>
+  
+  <text x="30" y="55" font-family="monospace" font-size="13" fill="#05D9E8">$</text>
+  <text x="45" y="55" font-family="monospace" font-size="13" fill="#E0E0E0">zertree --input sbom.json --mode prod</text>
+  
+  <text x="30" y="80" font-family="monospace" font-size="13" fill="#05D9E8">ZertTree v0.1.0 - Prod Mode</text>
+  <text x="30" y="98" font-family="monospace" font-size="13" fill="#6B7280">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</text>
+  <text x="30" y="120" font-family="monospace" font-size="13" fill="#E0E0E0">Parsing SBOM...</text>
+  <text x="30" y="138" font-family="monospace" font-size="13" fill="#00E676">Components found: </tspan><tspan fill="#05D9E8">247</tspan></text>
+  <text x="30" y="160" font-family="monospace" font-size="13" fill="#E0E0E0">Fetching CVE data...</text>
+  <text x="30" y="178" font-family="monospace" font-size="13" fill="#00E676">CVEs fetched: </tspan><tspan fill="#F7E018">32 vulnerabilities found</tspan></text>
+  <text x="30" y="200" font-family="monospace" font-size="13" fill="#E0E0E0">Analyzing risks...</text>
+  
+  <text x="30" y="230" font-family="monospace" font-size="13" fill="#FF2A6D">┌─────────────────────────────────────────┐</text>
+  <text x="30" y="245" font-family="monospace" font-size="13" fill="#FF2A6D">│  CRITICAL    12 (5%)  │  Score: 7.8/10  │</text>
+  <text x="30" y="260" font-family="monospace" font-size="13" fill="#F7E018">│  WARNING     28 (11%) │                 │</text>
+</svg>

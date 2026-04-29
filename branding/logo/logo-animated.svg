@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 180" width="600" height="180">
+  <defs>
+    <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#05D9E8">
+        <animate attributeName="stop-color" values="#05D9E8;#F7E018;#FF2A6D;#05D9E8" dur="4s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="50%" stop-color="#F7E018">
+        <animate attributeName="stop-color" values="#F7E018;#FF2A6D;#05D9E8;#F7E018" dur="4s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="100%" stop-color="#FF2A6D">
+        <animate attributeName="stop-color" values="#FF2A6D;#05D9E8;#F7E018;#FF2A6D" dur="4s" repeatCount="indefinite"/>
+      </stop>
+    </linearGradient>
+  </defs>
+  
+  <g transform="translate(40,40)">
+    <circle cx="30" cy="15" r="12" fill="#05D9E8">
+      <animate attributeName="r" values="10;14;10" dur="2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="10" cy="50" r="10" fill="#FF2A6D">
+      <animate attributeName="r" values="8;12;8" dur="2s" begin="0.6s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" begin="0.6s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="50" cy="50" r="10" fill="#F7E018">
+      <animate attributeName="r" values="8;12;8" dur="2s" begin="1.2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" begin="1.2s" repeatCount="indefinite"/>
+    </circle>
+    
+    <path d="M30 27 Q30 40 10 40" stroke="#05D9E8" stroke-width="2" fill="none" opacity="0.5">
+      <animate attributeName="stroke-dasharray" values="0,100;100,0" dur="1.5s" repeatCount="indefinite"/>
+    </path>
+    <path d="M30 27 Q30 40 50 40" stroke="#05D9E8" stroke-width="2" fill="none" opacity="0.5">
+      <animate attributeName="stroke-dasharray" values="0,100;100,0" dur="1.5s" begin="0.5s" repeatCount="indefinite"/>
+    </path>
+  </g>
+  
+  <text x="120" y="65" font-family="monospace" font-size="48" font-weight="bold" fill="url(#lg)">ZertTree</text>
+  <text x="120" y="85" font-family="monospace" font-size="14" fill="#8A8AA3" letter-spacing="3">SBOM RISK VISUALIZER</text>
+  <line x1="120" y1="95" x2="380" y2="95" stroke="#1A1A2E" stroke-width="1"/>
+</svg>
