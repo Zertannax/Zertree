@@ -1,71 +1,197 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/Zertannax/zertree/main/branding/logo.svg" width="120" alt="ZertTree Logo">
+<!-- Animated Logo SVG -->
+<svg width="600" height="180" viewBox="0 0 600 180" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#05D9E8;stop-opacity:1">
+        <animate attributeName="stop-color" values="#05D9E8;#F7E018;#FF2A6D;#05D9E8" dur="4s" repeatCount="indefinite" />
+      </stop>
+      <stop offset="50%" style="stop-color:#F7E018;stop-opacity:1">
+        <animate attributeName="stop-color" values="#F7E018;#FF2A6D;#05D9E8;#F7E018" dur="4s" repeatCount="indefinite" />
+      </stop>
+      <stop offset="100%" style="stop-color:#FF2A6D;stop-opacity:1">
+        <animate attributeName="stop-color" values="#FF2A6D;#05D9E8;#F7E018;#FF2A6D" dur="4s" repeatCount="indefinite" />
+      </stop>
+    </linearGradient>
+    
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <style>
+      .node { animation: pulse 2s ease-in-out infinite; }
+      .node-cyan { animation-delay: 0s; }
+      .node-pink { animation-delay: 0.6s; }
+      .node-yellow { animation-delay: 1.2s; }
+      
+      @keyframes pulse {
+        0%, 100% { opacity: 0.7; r: 10; }
+        50% { opacity: 1; r: 13; }
+      }
+      
+      .connection {
+        stroke-dasharray: 5;
+        animation: dash 1s linear infinite;
+      }
+      
+      @keyframes dash {
+        to { stroke-dashoffset: -10; }
+      }
+      
+      .title {
+        font-family: monospace;
+        font-size: 48px;
+        font-weight: bold;
+        fill: url(#logoGrad);
+        filter: url(#glow);
+      }
+      
+      .subtitle {
+        font-family: monospace;
+        font-size: 14px;
+        fill: #8A8AA3;
+        letter-spacing: 3px;
+      }
+    </style>
+  </defs>
+  
+  <g transform="translate(40, 40)">
+    <circle cx="30" cy="15" r="12" fill="#05D9E8" filter="url(#glow)" class="node node-cyan"/>
+    <circle cx="10" cy="50" r="10" fill="#FF2A6D" filter="url(#glow)" class="node node-pink"/>
+    <circle cx="50" cy="50" r="10" fill="#F7E018" filter="url(#glow)" class="node node-yellow"/>
+    
+    <path d="M 30 27 Q 30 40 10 40" stroke="#05D9E8" stroke-width="2" fill="none" class="connection" opacity="0.6"/>
+    <path d="M 30 27 Q 30 40 50 40" stroke="#05D9E8" stroke-width="2" fill="none" class="connection" opacity="0.6"/>
+    <path d="M 10 60 Q 30 70 50 60" stroke="#F7E018" stroke-width="1.5" fill="none" class="connection" opacity="0.4"/>
+  </g>
+  
+  <text x="120" y="65" class="title">ZertTree</text>
+  <text x="120" y="85" class="subtitle">SBOM RISK VISUALIZER</text>
+  
+  <line x1="120" y1="95" x2="380" y2="95" stroke="#1A1A2E" stroke-width="1"/>
+</svg>
 
-# 🌳 ZertTree
+<br/><br/>
 
-> **See the forest through the trees**
+<!-- Animated Badges -->
+<p>
+  <a href="https://www.rust-lang.org/"><img src="https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=%2305D9E8" alt="Rust"/></a>
+  <a href="https://svelte.dev/"><img src="https://img.shields.io/badge/Svelte-FF3E00?style=for-the-badge&logo=svelte&logoColor=white" alt="Svelte"/></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-05D9E8?style=for-the-badge" alt="License"/></a>
+  <a href=".github/workflows/ci.yml"><img src="https://img.shields.io/badge/GitHub%20Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white" alt="GitHub Actions"/></a>
+</p>
 
-[![Rust](https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
-[![Svelte](https://img.shields.io/badge/Svelte-FF3E00?style=for-the-badge&logo=svelte&logoColor=white)](https://svelte.dev/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-05D9E8?style=for-the-badge)](LICENSE)
-[![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)](.github/workflows/ci.yml)
-
-**Transform your SBOM into an interactive risk map. No more unreadable JSON files — see vulnerabilities, license conflicts, and outdated dependencies as a living, breathing graph.**
+**Transform your SBOM into an interactive risk map.**  
+*No more unreadable JSON files — see vulnerabilities, license conflicts, and outdated dependencies as a living, breathing graph.*
 
 </div>
 
 ---
 
-## ✨ Features
+## ⚡ What is ZertTree?
 
 <div align="center">
 
-| Feature | Description |
-|---------|-------------|
-| 🔍 **Parse CycloneDX & SPDX** | Native JSON parsing with Rust — 1000+ components in < 1s |
-| 🎯 **Risk Scoring** | Configurable rules (Dev/Prod modes + custom JSON) |
-| 🕷️ **CVE Detection** | Real-time NVD API integration with local SQLite caching |
-| 🌐 **Interactive Graph** | D3.js force-directed visualization with pulsing alerts |
-| 🎬 **Film Mode** | Auto-rotating camera for demos and presentations |
-| 🔧 **GitHub Action** | CI/CD integration with PR comments |
-| 📄 **Export Reports** | JSON, HTML, and PDF outputs |
-| ⚡ **Lightning Fast** | Parse 1000+ components in under 1 second |
-| 🎨 **Cyberpunk UI** | Dark theme with cyan/pink/yellow accents |
+<svg width="700" height="280" viewBox="0 0 700 280" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .terminal-bg { fill: #0A0A0F; }
+      .terminal-border { stroke: #1A1A2E; stroke-width: 2; }
+      .term-text { font-family: 'JetBrains Mono', 'Courier New', monospace; font-size: 13px; }
+      .cyan { fill: #05D9E8; }
+      .pink { fill: #FF2A6D; }
+      .yellow { fill: #F7E018; }
+      .green { fill: #00E676; }
+      .white { fill: #E0E0E0; }
+      .gray { fill: #6B7280; }
+      .cursor {
+        animation: blink 1s step-end infinite;
+      }
+      @keyframes blink {
+        50% { opacity: 0; }
+      }
+      .slide-in {
+        animation: slideIn 0.5s ease-out forwards;
+        opacity: 0;
+      }
+      @keyframes slideIn {
+        to { opacity: 1; }
+      }
+    </style>
+  </defs>
+  
+  <rect x="10" y="10" width="680" height="260" rx="8" class="terminal-bg terminal-border"/>
+  
+  <circle cx="30" cy="25" r="6" fill="#FF5F56"/>
+  <circle cx="50" cy="25" r="6" fill="#FFBD2E"/>
+  <circle cx="70" cy="25" r="6" fill="#27C93F"/>
+  
+  <text x="30" y="55" class="term-text cyan slide-in" style="animation-delay: 0s">$</text>
+  <text x="45" y="55" class="term-text white slide-in" style="animation-delay: 0.1s">zertree --input sbom.json --mode prod</text>
+  
+  <text x="30" y="80" class="term-text cyan slide-in" style="animation-delay: 0.5s">🌳</text>
+  <text x="55" y="80" class="term-text cyan slide-in" style="animation-delay: 0.6s">ZertTree v0.1.0 — Prod Mode</text>
+  
+  <text x="30" y="98" class="term-text gray slide-in" style="animation-delay: 0.7s">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</text>
+  
+  <text x="30" y="120" class="term-text white slide-in" style="animation-delay: 0.8s">📦 Parsing SBOM...</text>
+  <text x="30" y="138" class="term-text green slide-in" style="animation-delay: 1s">✓ Components found:</text>
+  <text x="200" y="138" class="term-text cyan slide-in" style="animation-delay: 1.1s">247</text>
+  
+  <text x="30" y="160" class="term-text white slide-in" style="animation-delay: 1.3s">🔍 Fetching CVE data...</text>
+  <text x="30" y="178" class="term-text green slide-in" style="animation-delay: 1.5s">✓ CVEs fetched:</text>
+  <text x="170" y="178" class="term-text yellow slide-in" style="animation-delay: 1.6s">32 vulnerabilities found</text>
+  
+  <text x="30" y="200" class="term-text white slide-in" style="animation-delay: 1.8s">⚡ Analyzing risks...</text>
+  
+  <text x="30" y="230" class="term-text pink slide-in" style="animation-delay: 2s">┌─────────────────────────────────────────┐</text>
+  <text x="30" y="245" class="term-text pink slide-in" style="animation-delay: 2.1s">│  🔴 CRITICAL    12 (5%)  │  Score: 7.8/10  │</text>
+  <text x="30" y="260" class="term-text yellow slide-in" style="animation-delay: 2.2s">│  🟡 WARNING     28 (11%) │                 │</text>
+</svg>
 
 </div>
 
 ---
 
-## 🚀 Quick Start
+## 🎯 Features
 
-### CLI
+<div align="center">
+
+| | Feature | Why it matters |
+|---|---|---|
+| ⚡ | **1000+ components/sec** | Rust-powered parsing that handles enterprise-scale SBOMs |
+| 🔍 | **CVE Detection** | Real-time NVD API with 24h SQLite cache |
+| 🎨 | **Interactive Graph** | D3.js force-directed visualization with live updates |
+| 🎬 | **Film Mode** | Auto-rotating camera for demos and presentations |
+| 📊 | **Smart Scoring** | Dev/Prod modes + custom JSON rule sets |
+| 🔧 | **CI/CD Ready** | GitHub Action with PR comments |
+| 📄 | **Export Anything** | JSON, HTML, PDF reports |
+| 🌙 | **Cyberpunk UI** | Dark theme that looks good at 3 AM |
+
+</div>
+
+---
+
+## 🚀 Get Started
+
+### CLI (One-liner)
 
 ```bash
-# Install
 cargo install zertree
-
-# Scan your SBOM
-zertree --input sbom.json --mode dev
-
-# Production mode (stricter rules)
-zertree --input sbom.json --mode prod --output json
-
-# Offline mode (skip CVE fetching)
-zertree --input sbom.json --offline
-
-# Custom rules
-zertree --input sbom.json --rules my-rules.json
+zertree --input sbom.json
 ```
 
 ### Web UI
 
 ```bash
 cd web-ui
-npm install
-npm run dev
-
-# Open http://localhost:5173
+npm install && npm run dev
+# http://localhost:5173
 ```
 
 ### GitHub Action
@@ -80,28 +206,127 @@ npm run dev
 
 ---
 
-## 📊 Risk Scoring
+## 🏗️ Architecture
 
-### Default Rules (Dev Mode)
+<div align="center">
 
-| Factor | Weight | Rule |
-|--------|--------|------|
-| CVEs | 35% | Average CVSS score |
-| License | 20% | GPL/AGPL = high risk |
-| Freshness | 25% | >3 years old = risky |
-| Maintenance | 20% | Few contributors = risky |
+```mermaid
+graph LR
+    A[📄 SBOM JSON] -->|Parse| B[🦀 Rust Engine]
+    B -->|Score| C[🎯 Risk Analysis]
+    C -->|Query| D[🌐 NVD API]
+    D -->|Cache| E[🗄️ SQLite]
+    C -->|Output| F[📊 Reports]
+    F --> G[💻 CLI]
+    F --> H[🌐 Web UI]
+    F --> I[⚙️ GitHub Action]
+```
 
-### Production Mode
+</div>
 
-Stricter weights with blocked licenses (GPL-3.0, AGPL-3.0, SSPL).
+### Tech Stack
+
+```
+┌─────────────────────────────────────┐
+│           ZertTree                  │
+├──────────────┬──────────────┬───────┤
+│   Rust CLI   │  Svelte UI   │ Action│
+│              │              │       │
+│ • Parser     │ • D3 Graph   │ • Docker│
+│ • Scorer     │ • GSAP Anim  │ • PR Bot│
+│ • NVD Client │ • Vite       │       │
+│ • SQLite     │              │       │
+└──────────────┴──────────────┴───────┘
+```
+
+---
+
+## 🎨 The Look
+
+<div align="center">
+
+<svg width="500" height="180" viewBox="0 0 500 180" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .glass { fill: rgba(18, 18, 31, 0.8); stroke: #1A1A2E; stroke-width: 1; }
+      .dot-crit { fill: #FF2A6D; }
+      .dot-warn { fill: #F7E018; }
+      .dot-ok { fill: #05D9E8; }
+      .pulse-crit { animation: pulseRed 2s ease-in-out infinite; }
+      .pulse-warn { animation: pulseYellow 2s ease-in-out infinite; }
+      .pulse-ok { animation: pulseCyan 2s ease-in-out infinite; }
+      
+      @keyframes pulseRed {
+        0%, 100% { opacity: 0.6; r: 8; }
+        50% { opacity: 1; r: 12; }
+      }
+      @keyframes pulseYellow {
+        0%, 100% { opacity: 0.6; r: 6; }
+        50% { opacity: 1; r: 10; }
+      }
+      @keyframes pulseCyan {
+        0%, 100% { opacity: 0.4; r: 5; }
+        50% { opacity: 0.8; r: 8; }
+      }
+    </style>
+  </defs>
+  
+  <rect x="20" y="20" width="460" height="140" rx="12" class="glass"/>
+  
+  <text x="50" y="50" fill="#E0E0E0" font-family="monospace" font-size="16" font-weight="bold">Risk Distribution</text>
+  
+  <circle cx="80" cy="90" r="10" class="dot-crit pulse-crit"/>
+  <text x="105" y="95" fill="#FF2A6D" font-family="monospace" font-size="14">CRITICAL  8 (3%)</text>
+  
+  <circle cx="80" cy="120" r="8" class="dot-warn pulse-warn"/>
+  <text x="105" y="125" fill="#F7E018" font-family="monospace" font-size="14">WARNING  24 (10%)</text>
+  
+  <circle cx="280" cy="90" r="6" class="dot-ok pulse-ok"/>
+  <text x="300" y="95" fill="#05D9E8" font-family="monospace" font-size="14">OK  215 (87%)</text>
+  
+  <text x="280" y="125" fill="#8A8AA3" font-family="monospace" font-size="12">Score: 4.2/10.0</text>
+  
+  <path d="M 420 70 L 440 70 L 450 90 L 430 90 Z" fill="#FF2A6D" opacity="0.3">
+    <animate attributeName="opacity" values="0.3;0.8;0.3" dur="1.5s" repeatCount="indefinite"/>
+  </path>
+</svg>
+
+**Dark theme with cyan, pink, and yellow accents**
+
+</div>
+
+---
+
+## 📊 Risk Scoring Engine
+
+### Dev Mode (Default)
+
+```json
+{
+  "cve_weight": 0.35,
+  "license_weight": 0.20,
+  "freshness_weight": 0.25,
+  "maintenance_weight": 0.20
+}
+```
+
+### Prod Mode (Stricter)
+
+```json
+{
+  "cve_weight": 0.50,
+  "license_weight": 0.30,
+  "blocked_licenses": ["GPL-3.0", "AGPL-3.0", "SSPL-1.0"]
+}
+```
 
 ### Custom Rules
 
 ```json
 {
   "name": "my-company-rules",
-  "cve_weight": 0.4,
-  "license_weight": 0.3,
+  "cve_weight": 0.40,
+  "license_weight": 0.30,
   "blocked_licenses": ["GPL-3.0", "Proprietary"],
   "max_age_months": 12,
   "min_contributors": 2
@@ -110,119 +335,15 @@ Stricter weights with blocked licenses (GPL-3.0, AGPL-3.0, SSPL).
 
 ---
 
-## 🏗️ Architecture
-
-```mermaid
-graph TD
-    A[SBOM JSON] --> B[Rust Parser]
-    B --> C[Risk Scorer]
-    C --> D[NVD API]
-    D --> E[SQLite Cache]
-    C --> F[Report]
-    F --> G[CLI]
-    F --> H[Web UI]
-    F --> I[GitHub Action]
-```
-
-### Project Structure
-
-```
-zertree/
-├── rust-parser/     # CLI + parser + scorer (Rust)
-│   ├── src/
-│   │   ├── main.rs        # CLI entry point
-│   │   ├── parser.rs      # CycloneDX/SPDX parsing
-│   │   ├── scorer.rs      # Risk calculation engine
-│   │   ├── cve_fetcher.rs # NVD API client
-│   │   └── rules.rs       # Configurable scoring rules
-│   └── Cargo.toml
-├── web-ui/          # Interactive visualization (Svelte + D3.js)
-│   ├── src/
-│   │   ├── App.svelte
-│   │   └── lib/
-│   │       ├── Graph.svelte
-│   │       ├── Sidebar.svelte
-│   │       ├── Header.svelte
-│   │       └── FilmMode.svelte
-│   └── package.json
-├── github-action/   # GitHub Marketplace action
-├── examples/        # Test SBOMs
-└── docs/            # Documentation
-```
-
----
-
-## 🎨 Design System
-
-| Token | Hex | Usage |
-|-------|-----|-------|
-| Background | `#0A0A0F` | Main background |
-| Cyan | `#05D9E8` | OK / Links |
-| Pink | `#FF2A6D` | Critical |
-| Yellow | `#F7E018` | Warning |
-
-**Fonts**: Space Grotesk (titles), JetBrains Mono (code), Inter (body)
-
----
-
-## 🧪 Testing
+## 🧪 Test It
 
 ```bash
-# Rust tests
-cd rust-parser
-cargo test
+# Rust
+cd rust-parser && cargo test
 
-# Web tests
-cd web-ui
-npm test
+# Web
+cd web-ui && npm test
 ```
-
----
-
-## 📸 Demo
-
-<div align="center">
-
-### CLI Output
-
-```
-🌳 ZertTree v0.1.0 — Dev Mode
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📦 Parsing SBOM...
-✓ Components found: 247
-
-🔍 Fetching CVE data...
-Fetching CVEs [████████████████████████████░░░░░░░░] 82%
-
-⚡ Analyzing risks...
-
-┌─────────────────────────────────────────┐
-│  RISK DISTRIBUTION                      │
-│                                         │
-│  🔴 CRITICAL     8 (3%)                 │
-│  🟡 WARNING     24 (10%)                │
-│  🟢 OK         215 (87%)                │
-│                                         │
-│  Overall Score:  4.2/10.0               │
-└─────────────────────────────────────────┘
-
-⚠️ TOP THREATS:
-   1 lodash@4.17.21 → Score: 8.5
-      → CVE-2021-23337 (HIGH)
-```
-
-### Web Interface
-
-*Interactive D3.js force-directed graph with real-time risk visualization*
-
-</div>
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for guidelines.
 
 ---
 
@@ -234,6 +355,6 @@ MIT © [Zertannax](https://github.com/zertannax)
 
 <div align="center">
 
-🌳 Built with Rust, Svelte, and caffeine
+<sub>🌳 Built with Rust, Svelte, and caffeine</sub>
 
 </div>
