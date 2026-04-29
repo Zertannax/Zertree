@@ -11,12 +11,12 @@
   <text x="30" y="80" font-family="monospace" font-size="13" fill="#05D9E8">ZertTree v0.1.0 - Prod Mode</text>
   <text x="30" y="98" font-family="monospace" font-size="13" fill="#6B7280">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</text>
   <text x="30" y="120" font-family="monospace" font-size="13" fill="#E0E0E0">Parsing SBOM...</text>
-  <text x="30" y="138" font-family="monospace" font-size="13" fill="#00E676">Components found: </tspan><tspan fill="#05D9E8">247</tspan></text>
+  <text x="30" y="138" font-family="monospace" font-size="13" fill="#00E676">Components found: <tspan fill="#05D9E8">247</tspan></text>
   <text x="30" y="160" font-family="monospace" font-size="13" fill="#E0E0E0">Fetching CVE data...</text>
-  <text x="30" y="178" font-family="monospace" font-size="13" fill="#00E676">CVEs fetched: </tspan><tspan fill="#F7E018">32 vulnerabilities found</tspan></text>
+  <text x="30" y="178" font-family="monospace" font-size="13" fill="#00E676">CVEs fetched: <tspan fill="#F7E018">32 vulnerabilities found</tspan></text>
   <text x="30" y="200" font-family="monospace" font-size="13" fill="#E0E0E0">Analyzing risks...</text>
   
-  <text x="30" y="230" font-family="monospace" font-size="13" fill="#FF2A6D">┌─────────────────────────────────────────┐</text>
-  <text x="30" y="245" font-family="monospace" font-size="13" fill="#FF2A6D">│  CRITICAL    12 (5%)  │  Score: 7.8/10  │</text>
-  <text x="30" y="260" font-family="monospace" font-size="13" fill="#F7E018">│  WARNING     28 (11%) │                 │</text>
+  <text x="30" y="230" font-family="monospace" font-size="13" fill="#FF2A6D">&#x250C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2510;</text>
+  <text x="30" y="245" font-family="monospace" font-size="13" fill="#FF2A6D">&#x2502;  CRITICAL    12 (5%)  &#x2502;  Score: 7.8/10  &#x2502;</text>
+  <text x="30" y="260" font-family="monospace" font-size="13" fill="#F7E018">&#x2502;  WARNING     28 (11%) &#x2502;                 &#x2502;</text>
 </svg>
