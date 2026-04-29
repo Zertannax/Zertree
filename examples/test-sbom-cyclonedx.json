@@ -1,0 +1,333 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "serialNumber": "urn:uuid:12345678-1234-1234-1234-123456789012",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "tools": [
+      {
+        "vendor": "zertree",
+        "name": "zertree-cli",
+        "version": "0.1.0"
+      }
+    ]
+  },
+  "components": [
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/lodash@4.17.21",
+      "name": "lodash",
+      "version": "4.17.21",
+      "description": "A modern JavaScript utility library delivering modularity, performance \u0026 extras.",
+      "purl": "pkg:npm/lodash@4.17.21",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "publisher": "John-David Dalton"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/express@4.18.2",
+      "name": "express",
+      "version": "4.18.2",
+      "description": "Fast, unopinionated, minimalist web framework for Node.js",
+      "purl": "pkg:npm/express@4.18.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "publisher": "TJ Holowaychuk"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/react@18.2.0",
+      "name": "react",
+      "version": "18.2.0",
+      "description": "A JavaScript library for building user interfaces",
+      "purl": "pkg:npm/react@18.2.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "publisher": "Meta"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/axios@1.6.0",
+      "name": "axios",
+      "version": "1.6.0",
+      "description": "Promise based HTTP client for the browser and node.js",
+      "purl": "pkg:npm/axios@1.6.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "publisher": "Matt Zabriskie"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/webpack@5.89.0",
+      "name": "webpack",
+      "version": "5.89.0",
+      "description": "A bundler for javascript and friends",
+      "purl": "pkg:npm/webpack@5.89.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "publisher": "Tobias Koppers"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/moment@2.29.4",
+      "name": "moment",
+      "version": "2.29.4",
+      "description": "Parse, validate, manipulate, and display dates",
+      "purl": "pkg:npm/moment@2.29.4",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "publisher": "Iskren Ivov Chernev"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/jest@29.7.0",
+      "name": "jest",
+      "version": "29.7.0",
+      "description": "Delightful JavaScript Testing",
+      "purl": "pkg:npm/jest@29.7.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "publisher": "Meta"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/typescript@5.3.3",
+      "name": "typescript",
+      "version": "5.3.3",
+      "description": "TypeScript is a superset of JavaScript that compiles to clean JavaScript output",
+      "purl": "pkg:npm/typescript@5.3.3",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "publisher": "Microsoft"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/eslint@8.56.0",
+      "name": "eslint",
+      "version": "8.56.0",
+      "description": "An AST-based pattern checker for JavaScript",
+      "purl": "pkg:npm/eslint@8.56.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "publisher": "Nicholas C. Zakas"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/d3@7.8.5",
+      "name": "d3",
+      "version": "7.8.5",
+      "description": "Bring data to life with SVG, Canvas and HTML",
+      "purl": "pkg:npm/d3@7.8.5",
+      "licenses": [
+        {
+          "license": {
+            "id": "ISC"
+          }
+        }
+      ],
+      "publisher": "Mike Bostock"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/gsap@3.12.2",
+      "name": "gsap",
+      "version": "3.12.2",
+      "description": "Professional-grade JavaScript animation for the modern web",
+      "purl": "pkg:npm/gsap@3.12.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "publisher": "GreenSock"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/svelte@4.2.0",
+      "name": "svelte",
+      "version": "4.2.0",
+      "description": "Cybernetically enhanced web apps",
+      "purl": "pkg:npm/svelte@4.2.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "publisher": "Rich Harris"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/bootstrap@5.3.2",
+      "name": "bootstrap",
+      "version": "5.3.2",
+      "description": "The most popular front-end framework for developing responsive, mobile first projects on the web",
+      "purl": "pkg:npm/bootstrap@5.3.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "publisher": "Twitter"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/lodash-es@4.17.21",
+      "name": "lodash-es",
+      "version": "4.17.21",
+      "description": "Lodash exported as ES Modules",
+      "purl": "pkg:npm/lodash-es@4.17.21",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "publisher": "John-David Dalton"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/next@14.0.4",
+      "name": "next",
+      "version": "14.0.4",
+      "description": "The React Framework for the Web",
+      "purl": "pkg:npm/next@14.0.4",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "publisher": "Vercel"
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "pkg:npm/react@18.2.0",
+      "dependsOn": [
+        "pkg:npm/lodash@4.17.21"
+      ]
+    },
+    {
+      "ref": "pkg:npm/next@14.0.4",
+      "dependsOn": [
+        "pkg:npm/react@18.2.0",
+        "pkg:npm/lodash@4.17.21"
+      ]
+    },
+    {
+      "ref": "pkg:npm/express@4.18.2",
+      "dependsOn": [
+        "pkg:npm/lodash@4.17.21"
+      ]
+    },
+    {
+      "ref": "pkg:npm/axios@1.6.0",
+      "dependsOn": [
+        "pkg:npm/lodash@4.17.21"
+      ]
+    },
+    {
+      "ref": "pkg:npm/webpack@5.89.0",
+      "dependsOn": [
+        "pkg:npm/lodash@4.17.21"
+      ]
+    },
+    {
+      "ref": "pkg:npm/jest@29.7.0",
+      "dependsOn": [
+        "pkg:npm/lodash@4.17.21"
+      ]
+    },
+    {
+      "ref": "pkg:npm/eslint@8.56.0",
+      "dependsOn": [
+        "pkg:npm/lodash@4.17.21"
+      ]
+    },
+    {
+      "ref": "pkg:npm/d3@7.8.5",
+      "dependsOn": [
+        "pkg:npm/lodash@4.17.21"
+      ]
+    },
+    {
+      "ref": "pkg:npm/gsap@3.12.2",
+      "dependsOn": [
+        "pkg:npm/lodash@4.17.21"
+      ]
+    },
+    {
+      "ref": "pkg:npm/svelte@4.2.0",
+      "dependsOn": [
+        "pkg:npm/lodash@4.17.21"
+      ]
+    },
+    {
+      "ref": "pkg:npm/bootstrap@5.3.2",
+      "dependsOn": [
+        "pkg:npm/lodash@4.17.21"
+      ]
+    },
+    {
+      "ref": "pkg:npm/lodash-es@4.17.21",
+      "dependsOn": [
+        "pkg:npm/lodash@4.17.21"
+      ]
+    }
+  ]
+}

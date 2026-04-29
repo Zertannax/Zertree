@@ -1,0 +1,72 @@
+{
+  "spdxVersion": "SPDX-2.3",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "name": "test-project",
+  "documentNamespace": "https://example.org/test-project",
+  "creationInfo": {
+    "created": "2024-01-15T10:30:00Z",
+    "creators": [
+      "Tool: zertree-cli-0.1.0"
+    ]
+  },
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-Package-lodash",
+      "name": "lodash",
+      "downloadLocation": "NOASSERTION",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "NOASSERTION",
+      "versionInfo": "4.17.21",
+      "supplier": "Person: John-David Dalton"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-express",
+      "name": "express",
+      "downloadLocation": "NOASSERTION",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "NOASSERTION",
+      "versionInfo": "4.18.2",
+      "supplier": "Person: TJ Holowaychuk"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-react",
+      "name": "react",
+      "downloadLocation": "NOASSERTION",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "NOASSERTION",
+      "versionInfo": "18.2.0",
+      "supplier": "Organization: Meta"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-typescript",
+      "name": "typescript",
+      "downloadLocation": "NOASSERTION",
+      "licenseConcluded": "Apache-2.0",
+      "licenseDeclared": "Apache-2.0",
+      "copyrightText": "NOASSERTION",
+      "versionInfo": "5.3.3",
+      "supplier": "Organization: Microsoft"
+    }
+  ],
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relatedSpdxElement": "SPDXRef-Package-lodash",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relatedSpdxElement": "SPDXRef-Package-express",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-express",
+      "relatedSpdxElement": "SPDXRef-Package-lodash",
+      "relationshipType": "DEPENDS_ON"
+    }
+  ]
+}

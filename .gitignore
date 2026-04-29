@@ -1,0 +1,28 @@
+# Rust
+target/
+Cargo.lock
+**/*.rs.bk
+*.pdb
+
+# Node.js
+node_modules/
+dist/
+build/
+*.log
+npm-debug.log*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+zertree-cache.db
+zertree-report.json
+zertree-report.html

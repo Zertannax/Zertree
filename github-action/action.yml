@@ -1,0 +1,49 @@
+name: 'ZertTree SBOM Scanner'
+description: 'Scan your SBOM for security risks and license issues'
+author: 'Zertannax'
+branding:
+  icon: 'shield'
+  color: 'gray-dark'
+
+inputs:
+  sbom-path:
+    description: 'Path to the SBOM file'
+    required: false
+    default: 'sbom.json'
+  mode:
+    description: 'Scoring mode: dev or prod'
+    required: false
+    default: 'dev'
+  fail-on-critical:
+    description: 'Fail the action if critical issues are found'
+    required: false
+    default: 'true'
+  output-format:
+    description: 'Output format: json, html, or pdf'
+    required: false
+    default: 'json'
+  rules-path:
+    description: 'Path to custom rules JSON file'
+    required: false
+    default: ''
+
+outputs:
+  report-path:
+    description: 'Path to the generated report'
+  critical-count:
+    description: 'Number of critical issues found'
+  warning-count:
+    description: 'Number of warning issues found'
+  overall-score:
+    description: 'Overall risk score (0-10)'
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  env:
+    INPUT_SBOM_PATH: ${{ inputs.sbom-path }}
+    INPUT_MODE: ${{ inputs.mode }}
+    INPUT_FAIL_ON_CRITICAL: ${{ inputs.fail-on-critical }}
+    INPUT_OUTPUT_FORMAT: ${{ inputs.output-format }}
+    INPUT_RULES_PATH: ${{ inputs.rules-path }}
+    GITHUB_TOKEN: ${{ github.token }}
