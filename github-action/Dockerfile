@@ -8,6 +8,8 @@ FROM debian:bookworm-slim
 
 RUN apt-get update && apt-get install -y \
     ca-certificates \
+    curl \
+    jq \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/target/release/zertree /usr/local/bin/zertree

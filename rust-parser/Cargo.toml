@@ -5,22 +5,19 @@ edition = "2021"
 authors = ["Zertannax"]
 description = "SBOM Risk Visualizer - See the forest through the trees"
 license = "MIT"
-repository = "https://github.com/zertannax/zertree"
+repository = "https://github.com/Zertannax/Zertree"
 keywords = ["sbom", "security", "cve", "dependencies", "cyclonedx"]
 categories = ["command-line-utilities", "development-tools"]
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-reqwest = { version = "0.11", features = ["json"] }
-tokio = { version = "1", features = ["full"] }
+reqwest = { version = "0.11", default-features = false, features = ["json", "rustls-tls"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 clap = { version = "4.0", features = ["derive"] }
-chrono = "0.4"
 colored = "2.0"
 anyhow = "1.0"
-toml = "0.8"
 rusqlite = { version = "0.30", features = ["bundled"] }
-urlencoding = "2.1"
 
 [dev-dependencies]
 tempfile = "3.8"

@@ -19,7 +19,7 @@ inputs:
     required: false
     default: 'true'
   output-format:
-    description: 'Output format: json, html, or pdf'
+    description: 'Output format: json or html'
     required: false
     default: 'json'
   rules-path:

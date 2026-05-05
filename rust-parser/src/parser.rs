@@ -1,5 +1,5 @@
+use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-use anyhow::{Result, Context};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Sbom {
@@ -11,6 +11,7 @@ pub struct Sbom {
     pub serial_number: String,
     pub version: i32,
     pub components: Vec<Component>,
+    #[serde(default)]
     pub dependencies: Vec<Dependency>,
 }
 
@@ -47,7 +48,11 @@ pub struct LicenseDetail {
 pub struct Dependency {
     #[serde(rename = "ref")]
     pub reference: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "dependsOn",
+        alias = "depends_on",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub depends_on: Option<Vec<String>>,
 }
 
@@ -61,10 +66,9 @@ impl SbomParser {
     pub fn parse(&mut self, content: &str) -> Result<Sbom> {
         let sbom: Sbom = serde_json::from_str(content)
             .with_context(|| "Failed to parse SBOM JSON. Ensure it's a valid CycloneDX format.")?;
-        
+
         Ok(sbom)
     }
-
 }
 
 #[cfg(test)]
@@ -92,9 +96,51 @@ mod tests {
 
         let mut parser = SbomParser::new();
         let sbom = parser.parse(json).unwrap();
-        
+
         assert_eq!(sbom.components.len(), 1);
         assert_eq!(sbom.components[0].name, "lodash");
         assert_eq!(sbom.components[0].version, "4.17.21");
+    }
+
+    #[test]
+    fn test_parse_depends_on_camelcase() {
+        // Real CycloneDX uses camelCase. We must accept it.
+        let json = r#"{
+            "bomFormat": "CycloneDX",
+            "specVersion": "1.5",
+            "serialNumber": "urn:uuid:1",
+            "version": 1,
+            "components": [
+                {"type": "library", "name": "a", "version": "1.0.0"},
+                {"type": "library", "name": "b", "version": "2.0.0"}
+            ],
+            "dependencies": [
+                {"ref": "pkg:npm/a@1.0.0", "dependsOn": ["pkg:npm/b@2.0.0"]}
+            ]
+        }"#;
+
+        let mut parser = SbomParser::new();
+        let sbom = parser.parse(json).unwrap();
+
+        assert_eq!(sbom.dependencies.len(), 1);
+        assert_eq!(
+            sbom.dependencies[0].depends_on.as_ref().unwrap()[0],
+            "pkg:npm/b@2.0.0"
+        );
+    }
+
+    #[test]
+    fn test_parse_missing_dependencies() {
+        let json = r#"{
+            "bomFormat": "CycloneDX",
+            "specVersion": "1.5",
+            "serialNumber": "urn:uuid:1",
+            "version": 1,
+            "components": []
+        }"#;
+
+        let mut parser = SbomParser::new();
+        let sbom = parser.parse(json).unwrap();
+        assert!(sbom.dependencies.is_empty());
     }
 }
