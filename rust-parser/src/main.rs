@@ -6,6 +6,7 @@ use std::path::PathBuf;
 
 mod cve_fetcher;
 mod parser;
+mod registry;
 mod rules;
 mod scorer;
 
@@ -30,13 +31,22 @@ struct Cli {
     #[arg(long, help = "Output format: json, html (text is always printed)")]
     output: Option<String>,
 
-    #[arg(long, help = "Skip vulnerability fetching (offline mode)")]
+    #[arg(
+        long,
+        help = "Skip both vulnerability and registry lookups (fully offline)"
+    )]
     offline: bool,
 
-    #[arg(long, help = "Override the SQLite vulnerability cache path")]
+    #[arg(
+        long,
+        help = "Skip registry metadata fetching (freshness/maintenance scoring becomes neutral)"
+    )]
+    no_metadata: bool,
+
+    #[arg(long, help = "Override the SQLite cache path")]
     cache: Option<PathBuf>,
 
-    #[arg(long, help = "Disable the SQLite vulnerability cache")]
+    #[arg(long, help = "Disable the SQLite cache (vulns + metadata)")]
     no_cache: bool,
 }
 
@@ -136,22 +146,56 @@ async fn main() -> Result<()> {
             Some(cli.cache.clone().unwrap_or_else(default_cache_path))
         };
         if let Some(p) = &cache_path {
-            println!("{} Vuln cache: {}", "💾".cyan(), p.display());
+            println!("{} Cache: {}", "💾".cyan(), p.display());
         }
 
-        println!("{} Querying OSV.dev for vulnerabilities...", "🔍".cyan());
-        let fetcher = cve_fetcher::CveFetcher::new(cache_path).await?;
+        let client = registry::build_client()?;
+        let vuln_cache = cache_path
+            .as_deref()
+            .map(cve_fetcher::VulnCache::open)
+            .transpose()?;
+        let meta_cache = cache_path
+            .as_deref()
+            .map(registry::MetadataCache::open)
+            .transpose()?;
+        let cve_fetcher = cve_fetcher::CveFetcher::new(client.clone(), vuln_cache);
+
+        println!(
+            "{} Querying OSV.dev{}...",
+            "🔍".cyan(),
+            if cli.no_metadata {
+                ""
+            } else {
+                " + npm/crates.io/PyPI"
+            }
+        );
 
         let total = sbom.components.len();
         for (i, component) in sbom.components.iter().enumerate() {
-            print_progress("Querying OSV", i + 1, total);
+            print_progress("Fetching", i + 1, total);
             let purl = match component.purl.clone() {
                 Some(p) => p,
-                None => continue, // OSV needs a purl; skip if we don't have one
+                None => continue,
             };
-            if let Ok(cves) = fetcher.fetch_for_purl(&purl).await {
-                if !cves.is_empty() {
-                    scorer.add_cves(&purl, cves);
+
+            // Run vuln + metadata lookups concurrently per component.
+            let cves_fut = cve_fetcher.fetch_for_purl(&purl);
+            if cli.no_metadata {
+                if let Ok(cves) = cves_fut.await {
+                    if !cves.is_empty() {
+                        scorer.add_cves(&purl, cves);
+                    }
+                }
+            } else {
+                let meta_fut = registry::fetch(&client, meta_cache.as_ref(), &purl);
+                let (cves_res, meta_res) = tokio::join!(cves_fut, meta_fut);
+                if let Ok(cves) = cves_res {
+                    if !cves.is_empty() {
+                        scorer.add_cves(&purl, cves);
+                    }
+                }
+                if let Ok(Some(md)) = meta_res {
+                    scorer.add_metadata(&purl, md);
                 }
             }
         }

@@ -1,8 +1,8 @@
 use anyhow::{Context, Result};
 use rusqlite::{params, Connection};
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::path::Path;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::scorer::CveInfo;
 
@@ -53,18 +53,8 @@ pub struct CveFetcher {
 }
 
 impl CveFetcher {
-    pub async fn new(cache_path: Option<PathBuf>) -> Result<Self> {
-        let client = reqwest::Client::builder()
-            .timeout(Duration::from_secs(30))
-            .user_agent(concat!("ZertTree/", env!("CARGO_PKG_VERSION")))
-            .build()?;
-
-        let cache = match cache_path {
-            Some(p) => Some(VulnCache::open(&p)?),
-            None => None,
-        };
-
-        Ok(Self { client, cache })
+    pub fn new(client: reqwest::Client, cache: Option<VulnCache>) -> Self {
+        Self { client, cache }
     }
 
     pub async fn fetch_for_purl(&self, purl: &str) -> Result<Vec<CveInfo>> {
@@ -179,12 +169,12 @@ fn parse_cvss_score(s: &str) -> Option<f64> {
     s.rsplit('/').next()?.parse::<f64>().ok()
 }
 
-struct VulnCache {
+pub struct VulnCache {
     conn: Connection,
 }
 
 impl VulnCache {
-    fn open(path: &PathBuf) -> Result<Self> {
+    pub fn open(path: &Path) -> Result<Self> {
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent).ok();
         }
@@ -201,7 +191,7 @@ impl VulnCache {
         Ok(Self { conn })
     }
 
-    fn get(&self, purl: &str) -> Result<Option<Vec<CveInfo>>> {
+    pub fn get(&self, purl: &str) -> Result<Option<Vec<CveInfo>>> {
         let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
         let row: Option<(String, i64)> = self
             .conn
@@ -220,7 +210,7 @@ impl VulnCache {
         Ok(None)
     }
 
-    fn put(&self, purl: &str, cves: &[CveInfo]) -> Result<()> {
+    pub fn put(&self, purl: &str, cves: &[CveInfo]) -> Result<()> {
         let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs() as i64;
         let json = serde_json::to_string(cves)?;
         self.conn.execute(
