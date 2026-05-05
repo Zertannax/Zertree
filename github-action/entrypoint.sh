@@ -45,26 +45,15 @@ if [ -f "$REPORT_FILE" ]; then
             PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH" 2>/dev/null || echo "")
             
             if [ -n "$PR_NUMBER" ] && [ "$PR_NUMBER" != "null" ]; then
-                COMMENT="## 🌳 ZertTree Security Scan
+                REPORT_PREVIEW=$(head -n 50 "$REPORT_FILE")
+                COMMENT_BODY=$(printf '## 🌳 ZertTree Security Scan\n\n| Metric | Value |\n|--------|-------|\n| 🔴 Critical | %s |\n| 🟡 Warning | %s |\n| 📊 Score | %s/10 |\n\n<details>\n<summary>View full report</summary>\n\n```json\n%s\n```\n</details>\n' "$CRITICAL" "$WARNING" "$SCORE" "$REPORT_PREVIEW")
+                # Build the JSON body via jq so quotes/newlines in the report can't break it.
+                PAYLOAD=$(jq -nc --arg body "$COMMENT_BODY" '{body: $body}')
 
-| Metric | Value |
-|--------|-------|
-| 🔴 Critical | $CRITICAL |
-| 🟡 Warning | $WARNING |
-| 📊 Score | ${SCORE}/10 |
-
-<details>
-<summary>View full report</summary>
-
-\`\`\`json
-$(cat "$REPORT_FILE" | head -n 50)
-\`\`\`
-</details>"
-                
                 curl -s -X POST \
                     -H "Authorization: token $GITHUB_TOKEN" \
                     -H "Content-Type: application/json" \
-                    -d "{\"body\":\"$COMMENT\"}" \
+                    -d "$PAYLOAD" \
                     "https://api.github.com/repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" > /dev/null
             fi
         fi

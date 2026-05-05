@@ -1,6 +1,5 @@
 # Rust
 target/
-Cargo.lock
 **/*.rs.bk
 *.pdb
 
@@ -26,3 +25,11 @@ Thumbs.db
 zertree-cache.db
 zertree-report.json
 zertree-report.html
+
+# Binaries (use GitHub Releases instead)
+*.exe
+/zertree
+
+# AI agent metadata
+.swarm/
+.claude-flow/
