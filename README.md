@@ -42,25 +42,27 @@ file, or an interactive Svelte + D3.js graph.
 |---------|---------------|
 | **CycloneDX 1.5 parser** | Reads CycloneDX JSON SBOMs (component name, version, purl, license). |
 | **Vulnerability lookup via OSV.dev** | Queries [OSV.dev](https://osv.dev) by `purl` — no API key needed, accurate per-version. |
-| **Local SQLite cache** | Caches OSV responses for 24 h at `$XDG_CACHE_HOME/zertree/cache.db` (or `~/.cache/zertree/cache.db`). |
-| **CVE + license scoring** | Two factor scoring (CVE severity + license risk) with `dev` / `prod` presets and custom JSON rules. |
+| **Registry metadata lookup** | Pulls release date and version count from npm, crates.io and PyPI to score freshness + maintenance. |
+| **Local SQLite cache** | Caches OSV responses (24 h) and registry metadata (7 d) at `$XDG_CACHE_HOME/zertree/cache.db`. |
+| **4-factor scoring** | CVE severity + license risk + freshness + maintenance, with `dev` / `prod` presets and custom JSON rules. |
+| **Concurrent fetches** | Per component, OSV and registry calls run in parallel via `tokio::join!`. |
 | **Interactive graph** | Svelte + D3.js force-directed visualization (`web-ui/`). |
 | **GitHub Action** | Drop-in Docker action that scans an SBOM and posts a PR comment. |
 | **JSON / HTML reports** | `--output json` or `--output html` produces a report file. |
 
 ### Not implemented yet
 
-The earlier README oversold a few things. To stay honest, here's what is **not**
-in v0.1.0:
+To stay honest, here's what is **not** in this version:
 
-- **Freshness / maintenance scoring.** Hooks existed but always returned the
-  same constant. Removed until they're backed by a real registry lookup.
-- **PDF export.** Was advertised, never implemented.
+- **PDF export.** Was advertised in the original README, never implemented.
 - **`cargo install zertree`.** Not yet on crates.io — build from source for now.
 - **`zertannax/zertree-action@v1`.** Not yet published to GitHub Marketplace —
   reference the action by path inside this repo instead.
 - **Performance benchmarks.** No "1000+ components/sec" claim is made — none has
   been measured.
+- **Ecosystem coverage for freshness/maintenance:** npm, crates.io and PyPI are
+  supported. Maven, Go modules, RubyGems, Composer, etc. fall through to a
+  neutral score (0).
 
 PRs to fix any of these are welcome.
 
@@ -82,7 +84,8 @@ Useful flags:
 ```bash
 zertree --input sbom.json --mode prod          # stricter scoring
 zertree --input sbom.json --output json        # writes zertree-report.json
-zertree --input sbom.json --offline            # skip OSV lookup
+zertree --input sbom.json --offline            # skip OSV + registry lookups
+zertree --input sbom.json --no-metadata        # skip registry only (keep OSV)
 zertree --input sbom.json --no-cache           # bypass the SQLite cache
 zertree --input sbom.json --cache /path/to.db  # override cache location
 ```
@@ -118,36 +121,48 @@ jobs:
 The final score per component is a weighted sum on a 0–10 scale:
 
 ```
-score = cve_score * cve_weight + license_risk * license_weight
+score = cve_score        * cve_weight
+      + license_risk     * license_weight
+      + freshness_risk   * freshness_weight
+      + maintenance_risk * maintenance_weight
 ```
 
 | Factor | Weight (Dev) | Weight (Prod) | Rule |
 |--------|:-:|:-:|------|
-| CVE severity | 0.60 | 0.70 | Worst CVSS score across all OSV vulns for this `purl`. |
-| License risk | 0.40 | 0.30 | MIT/Apache/BSD/ISC = 0; GPL/AGPL/SSPL = 8; blocked = 10; unknown = `license_unknown_score`. |
+| CVE severity | 0.50 | 0.60 | Worst CVSS score across all OSV vulns for this `purl`. |
+| License risk | 0.30 | 0.20 | MIT/Apache/BSD/ISC = 0; GPL/AGPL/SSPL = 8; blocked = 10; unknown = `license_unknown_score`. |
+| Freshness    | 0.10 | 0.10 | Based on the version's release date (npm/crates.io/PyPI): <1 yr = 0; 1–2 yr = 2; 2–3 yr = 5; >3 yr = 8. |
+| Maintenance  | 0.10 | 0.10 | Based on total versions on the registry: ≥20 = 0; ≥5 = 2; ≥2 = 5; 1 = 8. |
+
+Unsupported ecosystems (Maven, Go, RubyGems…) return **0** for freshness and
+maintenance, so packages we can't look up aren't unfairly penalised.
 
 | Risk level | Score range |
 |------------|-------------|
-| 🔴 Critical | ≥ 6.0 |
-| 🟡 Warning  | 3.0 – 5.99 |
-| 🟢 Ok       | < 3.0 |
+| 🔴 Critical | ≥ 5.0 |
+| 🟡 Warning  | 2.5 – 4.99 |
+| 🟢 Ok       | < 2.5 |
 
 A single CRITICAL CVE (CVSS ≥ 9.0) is enough to push a component into the
-Critical bucket regardless of its license.
+Critical bucket regardless of its license, freshness or maintenance signals.
 
 ### Custom rules
 
 ```json
 {
   "name": "my-company-rules",
-  "cve_weight": 0.70,
-  "license_weight": 0.30,
+  "cve_weight": 0.50,
+  "license_weight": 0.20,
+  "freshness_weight": 0.15,
+  "maintenance_weight": 0.15,
   "blocked_licenses": ["GPL-3.0", "Proprietary"],
   "license_unknown_score": 7.0
 }
 ```
 
-Pass it with `--rules my-rules.json`.
+Pass it with `--rules my-rules.json`. `freshness_weight` and
+`maintenance_weight` default to 0 if omitted, so v0.1.0 rule files keep
+working.
 
 ---
 
@@ -158,7 +173,9 @@ graph LR
     A[SBOM JSON] -->|Parse| B[Rust Engine]
     B -->|Score| C[Risk Analysis]
     C -->|Query by purl| D[OSV.dev]
+    C -->|Query by purl| R[npm / crates.io / PyPI]
     D -->|Cache 24h| E[SQLite]
+    R -->|Cache 7d| E
     C -->|Output| F[Reports]
     F --> G[CLI]
     F --> H[Web UI]
@@ -169,7 +186,7 @@ graph LR
 
 ```
 zertree/
-├── rust-parser/     # CLI + parser + scorer + OSV client (Rust)
+├── rust-parser/     # CLI + parser + scorer + OSV/registry clients (Rust)
 ├── web-ui/          # Interactive visualization (Svelte + D3.js)
 ├── github-action/   # Docker-based GitHub Action
 ├── examples/        # Test SBOMs
@@ -194,7 +211,7 @@ zertree/
 ## Testing
 
 ```bash
-cd rust-parser && cargo test          # 16 unit tests across parser/scorer/cache
+cd rust-parser && cargo test          # 27 unit tests across parser/scorer/registry/cache
 cd ../web-ui && npm run build         # smoke build
 ```
 

@@ -1,4 +1,5 @@
 use crate::parser::{Component, Sbom};
+use crate::registry::PackageMetadata;
 use crate::rules::RuleSet;
 use serde::{Deserialize, Serialize};
 
@@ -19,6 +20,10 @@ pub struct ComponentRisk {
     pub cves: Vec<CveInfo>,
     pub license: Option<String>,
     pub license_risk: f64,
+    pub freshness_risk: f64,
+    pub maintenance_risk: f64,
+    pub release_age_days: Option<u64>,
+    pub total_versions: Option<usize>,
     pub dependencies_count: usize,
 }
 
@@ -30,13 +35,14 @@ pub enum RiskLevel {
 }
 
 impl RiskLevel {
-    // Thresholds are chosen so a max-severity CVE (10.0) alone always lands in
-    // Critical even at the lowest cve_weight (0.6 in dev → 6.0). License-only
-    // risk caps at 10.0 * license_weight (≤4.0), which correctly stays Warning.
+    // Thresholds chosen so a max-severity CVE alone always lands in Critical
+    // even at the lowest cve_weight (0.5 in dev → 5.0). License-only or
+    // freshness-only never push to Critical: license maxes at 10*0.3=3.0,
+    // freshness at 10*0.1=1.0.
     pub fn from_score(score: f64) -> Self {
-        if score >= 6.0 {
+        if score >= 5.0 {
             RiskLevel::Critical
-        } else if score >= 3.0 {
+        } else if score >= 2.5 {
             RiskLevel::Warning
         } else {
             RiskLevel::Ok
@@ -64,6 +70,7 @@ pub struct RiskSummary {
 pub struct RiskScorer {
     rules: RuleSet,
     cve_cache: std::collections::HashMap<String, Vec<CveInfo>>,
+    metadata_cache: std::collections::HashMap<String, PackageMetadata>,
 }
 
 impl RiskScorer {
@@ -71,11 +78,16 @@ impl RiskScorer {
         RiskScorer {
             rules,
             cve_cache: std::collections::HashMap::new(),
+            metadata_cache: std::collections::HashMap::new(),
         }
     }
 
     pub fn add_cves(&mut self, key: &str, cves: Vec<CveInfo>) {
         self.cve_cache.insert(key.to_string(), cves);
+    }
+
+    pub fn add_metadata(&mut self, key: &str, md: PackageMetadata) {
+        self.metadata_cache.insert(key.to_string(), md);
     }
 
     pub fn analyze(&self, sbom: &Sbom) -> RiskReport {
@@ -90,11 +102,17 @@ impl RiskScorer {
             let cves = self.cve_cache.get(&key).cloned().unwrap_or_default();
             total_cves += cves.len();
 
+            let metadata = self.metadata_cache.get(&key);
+
             let cve_score = calculate_cve_score(&cves);
             let license_risk = self.calculate_license_risk(component);
+            let freshness_risk = freshness_score(metadata.and_then(|m| m.release_age_days));
+            let maintenance_risk = maintenance_score(metadata.and_then(|m| m.total_versions));
 
-            let score =
-                cve_score * self.rules.cve_weight + license_risk * self.rules.license_weight;
+            let score = cve_score * self.rules.cve_weight
+                + license_risk * self.rules.license_weight
+                + freshness_risk * self.rules.freshness_weight
+                + maintenance_risk * self.rules.maintenance_weight;
 
             let deps_count = sbom
                 .dependencies
@@ -111,6 +129,10 @@ impl RiskScorer {
                 cves,
                 license: get_license(component),
                 license_risk,
+                freshness_risk,
+                maintenance_risk,
+                release_age_days: metadata.and_then(|m| m.release_age_days),
+                total_versions: metadata.and_then(|m| m.total_versions),
                 dependencies_count: deps_count,
             });
         }
@@ -194,6 +216,28 @@ fn calculate_cve_score(cves: &[CveInfo]) -> f64 {
         .map(|c| c.cvss_score)
         .fold(0.0_f64, f64::max)
         .min(10.0)
+}
+
+// Unknown ecosystems and missing data return 0.0 so packages we can't look up
+// aren't penalised. Ecosystems where we DO know the age get a graduated risk.
+fn freshness_score(age_days: Option<u64>) -> f64 {
+    match age_days {
+        None => 0.0,
+        Some(d) if d < 365 => 0.0,
+        Some(d) if d < 730 => 2.0,
+        Some(d) if d < 1095 => 5.0,
+        Some(_) => 8.0,
+    }
+}
+
+fn maintenance_score(total_versions: Option<usize>) -> f64 {
+    match total_versions {
+        None => 0.0,
+        Some(n) if n >= 20 => 0.0,
+        Some(n) if n >= 5 => 2.0,
+        Some(n) if n >= 2 => 5.0,
+        Some(_) => 8.0,
+    }
 }
 
 fn get_license(component: &Component) -> Option<String> {
@@ -310,6 +354,50 @@ mod tests {
         };
         let report = scorer.analyze(&sbom);
         assert_eq!(report.summary.critical_count, 1);
-        assert!(report.components[0].score >= 6.0);
+        assert!(report.components[0].score >= 5.0);
+    }
+
+    #[test]
+    fn freshness_brackets() {
+        assert_eq!(freshness_score(None), 0.0);
+        assert_eq!(freshness_score(Some(30)), 0.0); // 1 month
+        assert_eq!(freshness_score(Some(400)), 2.0); // ~13 months
+        assert_eq!(freshness_score(Some(800)), 5.0); // ~26 months
+        assert_eq!(freshness_score(Some(2000)), 8.0); // ~5.5 years
+    }
+
+    #[test]
+    fn maintenance_brackets() {
+        assert_eq!(maintenance_score(None), 0.0);
+        assert_eq!(maintenance_score(Some(50)), 0.0);
+        assert_eq!(maintenance_score(Some(10)), 2.0);
+        assert_eq!(maintenance_score(Some(3)), 5.0);
+        assert_eq!(maintenance_score(Some(1)), 8.0);
+    }
+
+    #[test]
+    fn analyze_includes_freshness_and_maintenance_in_report() {
+        let mut scorer = RiskScorer::new(RuleSet::default_mode(RuleMode::Prod));
+        scorer.add_metadata(
+            "pkg:npm/abandoned@1.0.0",
+            PackageMetadata {
+                release_age_days: Some(2000),
+                total_versions: Some(1),
+            },
+        );
+        let sbom = Sbom {
+            bom_format: "CycloneDX".into(),
+            spec_version: "1.5".into(),
+            serial_number: "urn:uuid:1".into(),
+            version: 1,
+            components: vec![make_component("abandoned", Some("MIT"))],
+            dependencies: vec![],
+        };
+        let report = scorer.analyze(&sbom);
+        let comp = &report.components[0];
+        assert_eq!(comp.freshness_risk, 8.0);
+        assert_eq!(comp.maintenance_risk, 8.0);
+        assert_eq!(comp.release_age_days, Some(2000));
+        assert_eq!(comp.total_versions, Some(1));
     }
 }
