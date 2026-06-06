@@ -1,12 +1,14 @@
 use anyhow::{Context, Result};
 use rusqlite::{params, Connection};
 use serde::{Deserialize, Serialize};
+use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use crate::scorer::CveInfo;
 
 const OSV_QUERY_URL: &str = "https://api.osv.dev/v1/query";
+const OSV_BATCH_QUERY_URL: &str = "https://api.osv.dev/v1/querybatch";
 const CACHE_TTL_SECS: u64 = 24 * 60 * 60;
 
 #[derive(Debug, Serialize)]
@@ -19,13 +21,46 @@ struct OsvPackage<'a> {
     purl: &'a str,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize)]
+struct OsvBatchQuery<'a> {
+    queries: Vec<OsvQuery<'a>>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
 struct OsvResponse {
     #[serde(default)]
     vulns: Vec<OsvVuln>,
 }
 
+#[derive(Debug, Deserialize, Clone)]
+struct OsvBatchResponse {
+    #[serde(default)]
+    results: Vec<OsvResponse>,
+}
+
 #[derive(Debug, Deserialize)]
+struct CisaKevCatalog {
+    vulnerabilities: Vec<CisaKevItem>,
+}
+
+#[derive(Debug, Deserialize)]
+struct CisaKevItem {
+    #[serde(rename = "cveID")]
+    cve_id: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct EpssResponse {
+    data: Vec<EpssItem>,
+}
+
+#[derive(Debug, Deserialize)]
+struct EpssItem {
+    cve: String,
+    epss: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
 struct OsvVuln {
     id: String,
     #[serde(default)]
@@ -40,7 +75,7 @@ struct OsvVuln {
     database_specific: Option<serde_json::Value>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 struct OsvSeverity {
     #[serde(rename = "type")]
     severity_type: String,
@@ -65,6 +100,72 @@ impl CveFetcher {
         };
 
         Ok(Self { client, cache })
+    }
+
+    async fn enrich_cves(&self, cves: &mut [CveInfo]) -> Result<()> {
+        let cve_ids: Vec<String> = cves
+            .iter()
+            .map(|c| c.id.clone())
+            .filter(|id| id.starts_with("CVE-"))
+            .collect();
+
+        if cve_ids.is_empty() {
+            return Ok(());
+        }
+
+        let kev_set = if let Some(cache) = &self.cache {
+            if let Ok(Some(cached_kev)) = cache.get_cisa_kev() {
+                cached_kev
+            } else {
+                let fetched_kev = self.fetch_kev_from_api().await.unwrap_or_default();
+                let _ = cache.put_cisa_kev(&fetched_kev);
+                fetched_kev
+            }
+        } else {
+            self.fetch_kev_from_api().await.unwrap_or_default()
+        };
+
+        let epss_map = self.fetch_epss_batch(&cve_ids).await.unwrap_or_default();
+
+        for cve in cves {
+            cve.is_cisa_kev = Some(kev_set.contains(&cve.id));
+            if let Some(epss) = epss_map.get(&cve.id) {
+                cve.epss_score = Some(*epss);
+            } else {
+                cve.epss_score = Some(0.01);
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn fetch_kev_from_api(&self) -> Result<HashSet<String>> {
+        let url = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json";
+        let res = self.client.get(url).send().await?;
+        if !res.status().is_success() {
+            return Ok(HashSet::new());
+        }
+        let catalog: CisaKevCatalog = res.json().await?;
+        Ok(catalog.vulnerabilities.into_iter().map(|v| v.cve_id).collect())
+    }
+
+    async fn fetch_epss_batch(&self, cve_ids: &[String]) -> Result<HashMap<String, f64>> {
+        let mut epss_map = HashMap::new();
+        for chunk in cve_ids.chunks(100) {
+            let cves_str = chunk.join(",");
+            let url = format!("https://api.first.org/data/v1/epss?cve={}", cves_str);
+            let res = self.client.get(&url).send().await?;
+            if res.status().is_success() {
+                if let Ok(resp) = res.json::<EpssResponse>().await {
+                    for item in resp.data {
+                        if let Ok(score) = item.epss.parse::<f64>() {
+                            epss_map.insert(item.cve, score);
+                        }
+                    }
+                }
+            }
+        }
+        Ok(epss_map)
     }
 
     pub async fn fetch_for_purl(&self, purl: &str) -> Result<Vec<CveInfo>> {
@@ -94,13 +195,82 @@ impl CveFetcher {
             .json()
             .await
             .unwrap_or(OsvResponse { vulns: vec![] });
-        let cves = osv.vulns.into_iter().map(convert_vuln).collect::<Vec<_>>();
+        let mut cves = osv.vulns.into_iter().map(convert_vuln).collect::<Vec<_>>();
+
+        let _ = self.enrich_cves(&mut cves).await;
 
         if let Some(cache) = &self.cache {
             cache.put(purl, &cves)?;
         }
 
         Ok(cves)
+    }
+
+    pub async fn fetch_for_purls(&self, purls: &[String]) -> Result<HashMap<String, Vec<CveInfo>>> {
+        let mut results = HashMap::new();
+        let mut misses = Vec::new();
+
+        for purl in purls {
+            if let Some(cache) = &self.cache {
+                if let Some(cached) = cache.get(purl)? {
+                    results.insert(purl.clone(), cached);
+                    continue;
+                }
+            }
+            misses.push(purl.clone());
+        }
+
+        if misses.is_empty() {
+            return Ok(results);
+        }
+
+        for chunk in misses.chunks(1000) {
+            let queries = chunk
+                .iter()
+                .map(|purl| OsvQuery {
+                    package: OsvPackage { purl },
+                })
+                .collect::<Vec<_>>();
+
+            let body = OsvBatchQuery { queries };
+
+            let response = self
+                .client
+                .post(OSV_BATCH_QUERY_URL)
+                .json(&body)
+                .send()
+                .await
+                .with_context(|| "OSV batch query failed")?;
+
+            if !response.status().is_success() {
+                for purl in chunk {
+                    results.insert(purl.clone(), Vec::new());
+                }
+                continue;
+            }
+
+            let batch_resp: OsvBatchResponse = response
+                .json()
+                .await
+                .unwrap_or(OsvBatchResponse { results: vec![] });
+
+            for (i, purl) in chunk.iter().enumerate() {
+                let mut cves = if let Some(osv_res) = batch_resp.results.get(i) {
+                    osv_res.vulns.iter().cloned().map(convert_vuln).collect::<Vec<_>>()
+                } else {
+                    Vec::new()
+                };
+
+                let _ = self.enrich_cves(&mut cves).await;
+
+                if let Some(cache) = &self.cache {
+                    cache.put(purl, &cves)?;
+                }
+                results.insert(purl.clone(), cves);
+            }
+        }
+
+        Ok(results)
     }
 }
 
@@ -124,6 +294,8 @@ fn convert_vuln(v: OsvVuln) -> CveInfo {
         severity,
         cvss_score,
         description,
+        epss_score: None,
+        is_cisa_kev: None,
     }
 }
 
@@ -229,6 +401,37 @@ impl VulnCache {
         )?;
         Ok(())
     }
+
+    fn get_cisa_kev(&self) -> Result<Option<HashSet<String>>> {
+        let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
+        let row: Option<(String, i64)> = self
+            .conn
+            .query_row(
+                "SELECT vulns_json, fetched_at FROM vuln_cache WHERE purl = 'cisa_kev_catalog'",
+                [],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .ok();
+
+        if let Some((json, fetched_at)) = row {
+            if now.saturating_sub(fetched_at as u64) < CACHE_TTL_SECS {
+                let ids: Vec<String> = serde_json::from_str(&json)?;
+                return Ok(Some(ids.into_iter().collect()));
+            }
+        }
+        Ok(None)
+    }
+
+    fn put_cisa_kev(&self, ids: &HashSet<String>) -> Result<()> {
+        let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs() as i64;
+        let vec_ids: Vec<&String> = ids.iter().collect();
+        let json = serde_json::to_string(&vec_ids)?;
+        self.conn.execute(
+            "INSERT OR REPLACE INTO vuln_cache (purl, vulns_json, fetched_at) VALUES ('cisa_kev_catalog', ?1, ?2)",
+            params![json, now],
+        )?;
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -252,6 +455,8 @@ mod tests {
             severity: "HIGH".into(),
             cvss_score: 7.5,
             description: "test".into(),
+            epss_score: None,
+            is_cisa_kev: None,
         }];
         cache.put("pkg:npm/test@1.0.0", &cves).unwrap();
         let got = cache.get("pkg:npm/test@1.0.0").unwrap().unwrap();

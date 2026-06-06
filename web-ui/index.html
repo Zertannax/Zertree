@@ -25,6 +25,71 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.6; }
         }
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+                overflow: visible !important;
+                height: auto !important;
+            }
+            #app {
+                overflow: visible !important;
+                height: auto !important;
+            }
+            .app-container {
+                overflow: visible !important;
+                height: auto !important;
+            }
+            .background-canvas,
+            .header-bar button,
+            .sidebar,
+            .palette,
+            .sub-tab-bar,
+            .interactive-row:hover,
+            ::-webkit-scrollbar {
+                display: none !important;
+            }
+            .dashboard {
+                padding: 0 !important;
+                overflow: visible !important;
+                height: auto !important;
+            }
+            .dashboard-grid {
+                display: block !important;
+            }
+            .panel {
+                margin-bottom: 20px !important;
+                page-break-inside: avoid;
+            }
+            .panel-content,
+            .scrollable-panel {
+                max-height: none !important;
+                overflow: visible !important;
+            }
+            .glass-card {
+                box-shadow: none !important;
+                border: 1px solid #ccc !important;
+                backdrop-filter: none !important;
+                background: white !important;
+            }
+            .dense-table th {
+                background: #eee !important;
+                color: #333 !important;
+                border-bottom: 2px solid #ccc !important;
+            }
+            .dense-table td {
+                color: #000 !important;
+                border-bottom: 1px solid #ddd !important;
+            }
+            .metric-box, .status-badge, .badge, .compliance-badge {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            * {
+                text-shadow: none !important;
+                box-shadow: none !important;
+            }
+        }
     </style>
 </head>
 <body>

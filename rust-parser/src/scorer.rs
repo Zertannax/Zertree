@@ -50,6 +50,10 @@ pub struct CveInfo {
     pub severity: String,
     pub cvss_score: f64,
     pub description: String,
+    #[serde(default)]
+    pub epss_score: Option<f64>,
+    #[serde(default)]
+    pub is_cisa_kev: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -184,14 +188,24 @@ impl RiskScorer {
     }
 }
 
-// Use the worst CVE rather than the average — one critical vuln should not be
-// diluted by a handful of low-severity ones.
+// Use the worst CVE score enhanced by threat metrics (EPSS and CISA KEV)
 fn calculate_cve_score(cves: &[CveInfo]) -> f64 {
     if cves.is_empty() {
         return 0.0;
     }
     cves.iter()
-        .map(|c| c.cvss_score)
+        .map(|c| {
+            let mut score = c.cvss_score;
+            if let Some(epss) = c.epss_score {
+                // Boost score based on exploit likelihood: up to +2.0
+                score += epss * 2.0;
+            }
+            if let Some(true) = c.is_cisa_kev {
+                // Boost score by +2.5 if known to be actively exploited
+                score += 2.5;
+            }
+            score.min(10.0)
+        })
         .fold(0.0_f64, f64::max)
         .min(10.0)
 }
@@ -245,12 +259,16 @@ mod tests {
                 severity: "LOW".into(),
                 cvss_score: 2.0,
                 description: String::new(),
+                epss_score: None,
+                is_cisa_kev: None,
             },
             CveInfo {
                 id: "CVE-2".into(),
                 severity: "CRITICAL".into(),
                 cvss_score: 9.5,
                 description: String::new(),
+                epss_score: None,
+                is_cisa_kev: None,
             },
         ];
         assert_eq!(calculate_cve_score(&cves), 9.5);
@@ -298,6 +316,8 @@ mod tests {
                 severity: "CRITICAL".into(),
                 cvss_score: 10.0,
                 description: String::new(),
+                epss_score: None,
+                is_cisa_kev: None,
             }],
         );
         let sbom = Sbom {

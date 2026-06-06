@@ -142,20 +142,29 @@ async fn main() -> Result<()> {
         println!("{} Querying OSV.dev for vulnerabilities...", "🔍".cyan());
         let fetcher = cve_fetcher::CveFetcher::new(cache_path).await?;
 
-        let total = sbom.components.len();
-        for (i, component) in sbom.components.iter().enumerate() {
-            print_progress("Querying OSV", i + 1, total);
-            let purl = match component.purl.clone() {
-                Some(p) => p,
-                None => continue, // OSV needs a purl; skip if we don't have one
-            };
-            if let Ok(cves) = fetcher.fetch_for_purl(&purl).await {
-                if !cves.is_empty() {
-                    scorer.add_cves(&purl, cves);
+        let purls: Vec<String> = sbom.components
+            .iter()
+            .filter_map(|c| c.purl.clone())
+            .collect();
+
+        if !purls.is_empty() {
+            println!("{} Querying OSV.dev for {} components in batch mode...", "🔍".cyan(), purls.len());
+            match fetcher.fetch_for_purls(&purls).await {
+                Ok(results) => {
+                    for (purl, cves) in results {
+                        if !cves.is_empty() {
+                            scorer.add_cves(&purl, cves);
+                        }
+                    }
+                    println!("{} Vulnerability query completed.", "✓".green());
+                }
+                Err(e) => {
+                    eprintln!("{} Failed to query OSV: {}", "❌".red(), e);
                 }
             }
+        } else {
+            println!("{} No components with PURLs found to query.", "⚠️".yellow());
         }
-        println!();
         println!();
     }
 
